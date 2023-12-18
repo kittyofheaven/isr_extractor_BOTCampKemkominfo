@@ -16,7 +16,7 @@ export default function Page() {
   const [progress, setProgress] = useState(0);
 
   //rest api post
-  const [loadingText, setLoadingText] = useState("Please upload png file to continue");
+  const [loadingText, setLoadingText] = useState("Please upload ISR (Izin Stasiun Radio) file to continue (png, jpg)");
   const [ISRdata, setISRData] = useState(null);
 
   useEffect(() => {
