@@ -1,113 +1,128 @@
-import Image from 'next/image'
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { useEdgeStore } from "@/lib/edgestore";
+import { useState, useEffect, ReactNode } from "react";
+import axios from "axios";
+
+export default function Page() {
+
+  const [file, setFile] = useState<File>();
+  const { edgestore } = useEdgeStore();
+  const [urls, setUrls] = useState<{
+    url: string;
+    thumbnailUrl: string | null;
+  }>();
+  const [progress, setProgress] = useState(0);
+
+  //rest api post
+  const [loadingText, setLoadingText] = useState("Please upload png file to continue");
+  const [ISRdata, setISRData] = useState(null);
+
+  useEffect(() => {
+    const postData = async () => {
+      // console.log("Mulai");
+      setLoadingText("Loading...");
+      try {
+          const apiUrl = 'https://prod-43.southeastasia.logic.azure.com:443/workflows/6c749de62a844d3dbf2f99e71f45f2fb/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=W7V9OK1t036yvXZcFnbG0VSH9ETgeY8t4i9DDqlNcT8'; // Replace with your API endpoint
+          const data = {
+          // Your JSON data here
+          url: urls?.url,
+          };
+
+          const response = await axios.post(apiUrl, data);
+          // console.log('Response:', response.data);
+
+          setISRData(response.data);
+          // Handle the response or update the state as needed
+      } catch (error) {
+          console.error('Error posting data:', error);
+          // Handle the error
+      }
+    };
+
+    if (urls && urls.url) {
+      postData();
+    }
+
+  }, [urls?.url]);
+
+  useEffect(() => {
+
+    const setISRdataUseState =async () => {
+      // console.log("ISRdata");
+      if (ISRdata) {
+        // console.log((ISRdata as any)?.Nomor as string);
+      }
+    }
+
+    if (ISRdata) {
+      setISRdataUseState();
+    }
+  }, [ISRdata]);
+
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <div className="flex flex-col items-center m-6 gap-2">
+      <input type="file" onChange={(e) => {
+        setFile(e.target.files?.[0]);
+      }} />
+
+      <div className="h-[6px] w-44 border rounded overflow-hidden">
+        <div
+        className="h-full bg-black transition-all duration-150"
+        style={{
+          width: `${progress}%`
+        }}/>
       </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      <button 
+        className=" bg-black Dtext-black rounded px-2 hover:opacity-80 text-white"
+        onClick={async () => {
+          if (file) {
+            const res = await edgestore.myISRImages.upload({ 
+              file,
+              onProgressChange: (progress) => {
+                setProgress(progress);
+              }
+            });
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+            setUrls({
+              url: res.url,
+              thumbnailUrl: res.thumbnailUrl,
+            });
+          }
+        }}>
+        Upload
+      </button>
+      {urls?.url && <img src={urls.url} alt="Image" />}
+      {urls?.url && < Link href={urls.url} target="_blank">Inspect</Link>} 
+      {urls?.thumbnailUrl && <Link href={urls.thumbnailUrl} target="_blank"></Link>}
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+      {ISRdata ? (
+        <table className="border-collapse border border-gray-300">
+          <thead>
+            <tr>
+              <th className="border border-gray-300 p-2">Field</th>
+              <th className="border border-gray-300 p-2">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(ISRdata).map(([field, value]) => (
+              <tr key={field}>
+                <td className="border border-gray-300 p-2">{field}</td>
+                <td className="border border-gray-300 p-2">{value as ReactNode}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>{loadingText}</p>
+      )}
+    </div>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    
+
+  );
 }
